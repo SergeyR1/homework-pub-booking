@@ -2,7 +2,7 @@
 
 ## Your answer
 
-In my run of `make ex6` (`session sess_4a34c15a3679`, tier 1 — stdlib
+In my run of `make ex6` (`session sess_6ed8a66a7f78`, tier 1 — stdlib
 mock on `127.0.0.1:5905/webhooks/rest/webhook`), `RasaStructuredHalf`
 built a clean booking payload and handed it to the mock server, which
 returned `Booking confirmed. Reference: BK-7D401E9E.` The final object
@@ -45,7 +45,7 @@ contract that closes the failure modes from Ex5.
 
 ## Citations
 
-- `sessions/sess_4a34c15a3679/logs/trace.jsonl` — rasa.request, the
+- `sessions/sess_6ed8a66a7f78/logs/trace.jsonl` — rasa.request, the
   custom action payload, and the final `committed=True`
 - `rasa_project/actions/actions.py` — `ActionValidateBooking` with the
   party-size and deposit caps

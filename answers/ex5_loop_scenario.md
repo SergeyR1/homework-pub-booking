@@ -2,7 +2,7 @@
 
 ## Your answer
 
-In my run (`session sess_a7be4330d569`, FakeLLMClient, offline mode) the
+In my run (`session sess_d05f0e18e58a`, FakeLLMClient, offline mode) the
 planner split the task into two subgoals: `sg_1` — collect the Haymarket
 venue, weather, and cost facts; and `sg_2` — emit an HTML flyer from
 those facts. The decomposition is visible in the trace as a sequence of
@@ -43,9 +43,9 @@ attempt would silently drop out of the trace.
 
 ## Citations
 
-- `sessions/sess_a7be4330d569/logs/trace.jsonl` — planner.plan,
+- `sessions/sess_d05f0e18e58a/logs/trace.jsonl` — planner.plan,
   executor.run_subgoal, dataflow_check_passed
-- `sessions/sess_a7be4330d569/workspace/flyer.html` — the verified
+- `sessions/sess_d05f0e18e58a/workspace/flyer.html` — the verified
   output
 - `starter/edinburgh_research/integrity.py:99` — `fact_appears_in_log`
   scans both `output` and `arguments` recursively

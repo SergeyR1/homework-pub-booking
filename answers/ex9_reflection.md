@@ -4,7 +4,7 @@
 
 ### Your answer
 
-In my Ex7 run (`session sess_8f3378c46281`) the bridge closed with
+In my Ex7 run (`session sess_47cdfa3b79b8`) the bridge closed with
 `rounds=2, summary: structured confirmed in round 2`. That means the
 planner correctly split the work: the research subgoal stayed on the
 loop half, while the "commit the booking under venue policy" decision
@@ -36,9 +36,9 @@ the hybrid-agent lecture.
 
 ### Citation
 
-- `sessions/sess_8f3378c46281/logs/trace.jsonl` — events `planner.plan`,
+- `sessions/sess_47cdfa3b79b8/logs/trace.jsonl` — events `planner.plan`,
   `bridge.round`
-- `sessions/sess_8f3378c46281/handoffs_audit/` — two forward handoffs
+- `sessions/sess_47cdfa3b79b8/handoffs_audit/` — two forward handoffs
   (round 1 rejected, round 2 committed)
 - `rasa_project/actions/actions.py:ActionValidateBooking`
 
@@ -48,7 +48,7 @@ the hybrid-agent lecture.
 
 ### Your answer
 
-In my final Ex5 run (`session sess_a7be4330d569`) the integrity check
+In my final Ex5 run (`session sess_d05f0e18e58a`) the integrity check
 returned `dataflow OK: verified 4 fact(s) against tool outputs` —
 confirmed `cloudy`, `12` (°C), `£540`, `£0`. So that I'm not describing
 the happy path in the abstract, I deliberately seeded a noisy negative
@@ -78,7 +78,7 @@ cite "data it received" that the log never witnessed.
 
 ### Citation
 
-- `sessions/sess_a7be4330d569/logs/trace.jsonl` —
+- `sessions/sess_d05f0e18e58a/logs/trace.jsonl` —
   `dataflow_check_passed`
 - `starter/edinburgh_research/integrity.py:99`
   (`fact_appears_in_log`) — recursive scan of both `output` and
@@ -113,7 +113,7 @@ Now consider removing session directories. First — isolation: today
 without that encapsulating layer, sibling sessions start to see each
 other because workspaces merge. Second — debugging turns into SQL
 archaeology: today the answer to "how did this booking reach commit"
-is `cd sessions/sess_8f3378c46281 && cat handoffs_audit/*`, and I see
+is `cd sessions/sess_47cdfa3b79b8 && cat handoffs_audit/*`, and I see
 all three rounds at a glance; without directories those events smear
 across a single central log with cursor navigation. Third — the Ex5
 integrity check falls apart: `_TOOL_CALL_LOG` lives in process memory,
@@ -130,9 +130,9 @@ consistency is enough.
 
 ### Citation
 
-- `sessions/sess_a7be4330d569/` — session directory layout the
+- `sessions/sess_d05f0e18e58a/` — session directory layout the
   integrity check relies on
-- `sessions/sess_8f3378c46281/handoffs_audit/` — example of how the
+- `sessions/sess_47cdfa3b79b8/handoffs_audit/` — example of how the
   directory makes round-trips debuggable
 - `starter/edinburgh_research/tools.py` — `session.workspace_dir` as
   the flyer's write target

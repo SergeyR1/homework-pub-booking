@@ -2,7 +2,7 @@
 
 ## Your answer
 
-In my run (`session sess_8f3378c46281`, `make ex7`) the bridge closed
+In my run (`session sess_47cdfa3b79b8`, `make ex7`) the bridge closed
 with `outcome=completed`, `rounds=2`, and
 `summary: structured confirmed in round 2`. That is — the structured
 side honestly rejected in round 1, and only accepted in round 2 after
@@ -45,9 +45,9 @@ the two halves of the agent, not on the way out the door.
 
 ## Citations
 
-- `sessions/sess_8f3378c46281/handoffs_audit/` — two forward handoffs
+- `sessions/sess_47cdfa3b79b8/handoffs_audit/` — two forward handoffs
   (round 1: rejected, round 2: committed) plus the reverse task
-- `sessions/sess_8f3378c46281/logs/trace.jsonl` — `bridge.round`
+- `sessions/sess_47cdfa3b79b8/logs/trace.jsonl` — `bridge.round`
   events with rounds counter
 - `starter/handoff_bridge/bridge.py` — the `max_rounds=3` cap and
   `escalate_to_human` path
