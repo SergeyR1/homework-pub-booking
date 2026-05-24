@@ -93,6 +93,10 @@ class RasaStructuredHalf(StructuredHalf):
             )
 
         booking = rasa_msg["metadata"]["booking"]
+
+        # Build Rasa REST webhook payload — sender, the slash-command
+        # message, and structured metadata.booking that the custom
+        # action will read out of tracker.latest_message["metadata"].
         body = json.dumps(
             {
                 "sender": rasa_msg["sender"],
@@ -107,6 +111,10 @@ class RasaStructuredHalf(StructuredHalf):
             method="POST",
         )
 
+        # urllib is sync; we don't want it to block the asyncio loop, so
+        # we offload to the default executor. (httpx.AsyncClient would be
+        # cleaner here, but the project keeps Rasa transport on stdlib to
+        # avoid an extra dep just for one POST.)
         try:
             raw_response = await asyncio.get_event_loop().run_in_executor(
                 None,
@@ -155,10 +163,13 @@ class RasaStructuredHalf(StructuredHalf):
                 next_action="escalate",
             )
 
+        # Scan the Rasa response array. We accept two channels of signal:
+        # the structured `custom.action` payload (preferred) and the
+        # plain-text body (fallback) — some Rasa channels strip `custom`.
         confirmed = False
         rejected = False
         rejection_reason = ""
-        booking_reference = None
+        booking_reference: str | None = None
         for m in messages:
             if not isinstance(m, dict):
                 continue
@@ -170,6 +181,7 @@ class RasaStructuredHalf(StructuredHalf):
                 confirmed = True
                 if isinstance(custom, dict):
                     booking_reference = custom.get("booking_reference")
+                # Fallback: pull "BK-XXXXXXXX" out of the message text.
                 if "reference:" in text and not booking_reference:
                     booking_reference = text.split("reference:", 1)[1].strip().rstrip(".").upper()
             if action == "rejected" or "can't accept" in text or "rejected" in text:
@@ -202,6 +214,8 @@ class RasaStructuredHalf(StructuredHalf):
                 next_action="escalate",
             )
 
+        # Neither confirmation nor rejection — treat as escalate so the
+        # bridge can either retry or hand off to a human.
         return HalfResult(
             success=False,
             output={

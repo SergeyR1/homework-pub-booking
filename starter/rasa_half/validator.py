@@ -61,18 +61,22 @@ def normalise_booking_payload(raw: dict) -> dict:
         raise ValidationFailed("missing venue_id")
     venue_id = canonicalise_venue_id(venue_id_raw)
 
+    # Date — required.
     date_raw = raw.get("date")
     if not date_raw:
         raise ValidationFailed("missing date")
     date_iso = _normalise_date(date_raw)
 
+    # Time — required.
     time_raw = raw.get("time")
     if not time_raw:
         raise ValidationFailed("missing time")
     time_24h = parse_time_24h(time_raw)
 
+    # Party size — required, parsed/validated by the helper.
     party = parse_party_size(raw.get("party_size"))
 
+    # Deposit — optional, defaults to 0 GBP if absent.
     deposit = 0
     if raw.get("deposit") is not None:
         deposit = parse_currency_gbp(raw["deposit"])
@@ -87,6 +91,8 @@ def normalise_booking_payload(raw: dict) -> dict:
     if catering not in ("drinks_only", "bar_snacks", "sit_down_meal", "three_course_meal"):
         catering = "bar_snacks"
 
+    # Stable sender suffix — same booking (venue + date + time) always yields
+    # the same `sender`, so Rasa can de-duplicate retries server-side.
     stable_suffix = hashlib.sha1(f"{venue_id}-{date_iso}-{time_24h}".encode()).hexdigest()[:8]
 
     return {
@@ -206,7 +212,9 @@ def parse_time_24h(raw: str) -> str:
 def canonicalise_venue_id(raw: str) -> str:
     """'Haymarket Tap' → 'haymarket_tap'. Leaves 'haymarket_tap' unchanged."""
     s = str(raw).strip().lower()
+    # Collapse runs of whitespace/hyphens into a single underscore.
     s = re.sub(r"[\s\-]+", "_", s)
+    # Drop anything outside [a-z0-9_] (apostrophes, punctuation, etc).
     s = re.sub(r"[^a-z0-9_]", "", s)
     return s
 

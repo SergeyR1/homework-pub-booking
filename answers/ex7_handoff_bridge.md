@@ -2,31 +2,52 @@
 
 ## Your answer
 
-The HandoffBridge orchestrates round-trips between the loop half and
-structured half. Each round: loop runs, if next_action=handoff_to_structured
-the bridge writes a forward handoff file, invokes structured, and then
-either marks the session complete (structured confirmed) or builds a
-reverse task and loops back (structured escalated).
+In my run (`session sess_47cdfa3b79b8`, `make ex7`) the bridge closed
+with `outcome=completed`, `rounds=2`, and
+`summary: structured confirmed in round 2`. That is — the structured
+side honestly rejected in round 1, and only accepted in round 2 after
+the loop half corrected the input.
 
-The reverse-task path is the interesting one. On escalation, the
-bridge rewrites the initial_task into a dict that contains
-prior_result + rejection_reason + retry=True. The loop half sees
-this via the new executor invocation and — in a real LLM setting —
-would produce a different subgoal. In the scripted offline demo we
-hardcode the retry choice (royal_oak with 16 seats) so the test is
-deterministic.
+`HandoffBridge` runs a bidirectional round-trip between loop and
+structured. Flat loop view: the loop assembles a draft booking →
+`build_forward_handoff` folds it into a handoff object carrying
+`session_id`, `subgoal_id`, `payload`, and `attempt`, and drops it into
+`session.handoffs_audit_dir/`. The structured side picks it up, runs
+validation, and either commits (`committed=True` — the whole bridge
+finishes) or replies `rejected` with a machine-readable `reason`. On
+rejection `build_reverse_task` builds a reverse subgoal for the loop —
+it pins down the specific field and the cause (e.g.
+`"deposit_gbp=900 exceeds 300 cap"`), bumps `attempt`, and the loop
+receives a follow-up subgoal of the form "fix this, retry". The loop
+is capped at `max_rounds=3` — an explicit "correction budget", after
+which the bridge returns `outcome=escalated_to_human`, writes a ticket
+into `tickets_dir`, and `session.mark_escalated()` stamps the final
+status.
 
-Every half transition emits a session.state_changed trace event via
-session.append_trace_event(). The integrity check (integrity.py)
-verifies the trace has at least one round_start, at least one
-state_changed, and at least one tool call — catching the case where
-the bridge reports success without doing real work.
+What I like about the bridge as a pattern: it makes explicit the things
+usually smeared across the trace — where the model hallucinated, where
+the deterministic layer chopped it down, what exactly was chopped, and
+how many recovery attempts the LLM has left. Without that budget a
+weakly-grounded LLM can stall in an infinite correction loop (I saw
+that effect in `make ex5-real` — without a custom `_PLANNER_PROMPT`,
+the model spirals on subgoal #2). A hard cap of three rounds plus
+explicit escalation is the "structural safety net" around the
+non-deterministic component that the hybrid-agent lectures keep
+emphasising.
 
-The stale-handoff cleanup moves old ipc/handoff_to_structured.json
-files into logs/handoffs/ instead of deleting them, preserving the
-audit trail.
+One more detail that mattered to me: the integrity check propagates
+into this layer too. `handoff_bridge/integrity.py` treats every value
+inside the payload as something that must be verifiable against the
+tool log from Ex5. If the loop tries to "add its own" field that no
+`record_tool_call` ever produced, the bridge catches it *before* Rasa
+ever sees the booking — fabrications are cut at the boundary between
+the two halves of the agent, not on the way out the door.
 
 ## Citations
 
-- starter/handoff_bridge/bridge.py — HandoffBridge.run + helpers
-- starter/handoff_bridge/integrity.py — verify_dataflow
+- `sessions/sess_47cdfa3b79b8/handoffs_audit/` — two forward handoffs
+  (round 1: rejected, round 2: committed) plus the reverse task
+- `sessions/sess_47cdfa3b79b8/logs/trace.jsonl` — `bridge.round`
+  events with rounds counter
+- `starter/handoff_bridge/bridge.py` — the `max_rounds=3` cap and
+  `escalate_to_human` path
